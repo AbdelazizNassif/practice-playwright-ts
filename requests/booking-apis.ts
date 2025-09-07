@@ -1,11 +1,11 @@
 import {
   APIRequestContext,
-  expect,
-  type Locator,
-  type Page,
 } from "@playwright/test";
+import bookingBody from '../bodies/booking-test-body.json'; // typed as `any` by default
+
 
 export class BookingRequests {
+
   readonly request: APIRequestContext;
 
   constructor(request: APIRequestContext) {
@@ -31,7 +31,16 @@ export class BookingRequests {
     });
     return res;
   }
-
+  async createBooking2() {
+          const res = await this.request.post("/booking", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: bookingBody,
+    });
+    console.log('book bod is:' + bookingBody)
+    return res;
+  }
   async getAllBookings() {
     const res = await this.request.get("/booking", {
       headers: {

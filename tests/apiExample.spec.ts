@@ -24,9 +24,20 @@ test("precondition: Auth", async ({ request }) => {
   console.log(`token is: ${token}`);
 });
 
-test("create booking", async ({ request }) => {
+test.skip("create booking", async ({ request }) => {
   let bookingReqs = new BookingRequests(request);
   const res = await bookingReqs.createBooking();
+  console.log(await res.headers());
+  console.log(await res.json());
+  console.log(await res.status());
+  const resAsJson = await res.json();
+  await expect(resAsJson.bookingid).not.toBeNull();
+  newBookingId = resAsJson.bookingid;
+});
+
+test("create booking 2 - read body from file", async ({ request }) => {
+  let bookingReqs = new BookingRequests(request);
+  const res = await bookingReqs.createBooking2();
   console.log(await res.headers());
   console.log(await res.json());
   console.log(await res.status());
