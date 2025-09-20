@@ -1,63 +1,87 @@
 import { test, expect, type Page } from "@playwright/test";
-import { BookingRequests } from "../requests/booking-apis";
+import { BookingRequests } from "../requests/booking-requests";
+import { Booking, BookingDates } from "../pojo-bodies/Booking";
+import { AuthenticateRequests } from "../requests/auth-requests";
+
 let token: any;
 let newBookingId: any;
 // classes
 let bookingReqs: BookingRequests;
+let authenticateReqs: AuthenticateRequests;
+let fname: string = "automated fname " + new Date().getTime();
+let updatedFname: string = "automated updated " + new Date().getTime();
+let lname: string = "automated lname " + new Date().getTime();
+let totalPrice: number = 5000;
+let hasDeposite: boolean = false;
+let bookingDates: BookingDates = new BookingDates("2018-01-01", "2019-01-01");
+let additionalNeeds: string = "breakfast";
 
 test.describe.configure({ mode: "serial" });
 test("precondition: Auth", async ({ request }) => {
-  const res = await request.post("/auth", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    data: {
-      username: "admin",
-      password: "password123",
-    },
-  });
-  console.log(await res.headers());
-  console.log(await res.json());
-  console.log(await res.status());
+  authenticateReqs = new AuthenticateRequests(request);
+  const res = await authenticateReqs.authenticate();
   const resAsJson = await res.json();
   token = resAsJson.token;
-  console.log(`token is: ${token}`);
 });
 
-test.skip("create booking", async ({ request }) => {
-  let bookingReqs = new BookingRequests(request);
-  const res = await bookingReqs.createBooking();
-  console.log(await res.headers());
-  console.log(await res.json());
-  console.log(await res.status());
+test("create booking - get body using serialization", async ({ request }) => {
+  const booking = new Booking(
+    fname,
+    lname,
+    totalPrice,
+    hasDeposite,
+    bookingDates,
+    additionalNeeds
+  );
+  let bookingReqs = new BookingRequests(request, token);
+  const res = await bookingReqs.createBooking(booking);
   const resAsJson = await res.json();
   await expect(resAsJson.bookingid).not.toBeNull();
+  await expect(resAsJson.booking.firstname).toEqual(fname);
   newBookingId = resAsJson.bookingid;
 });
 
-test("create booking 2 - read body from file", async ({ request }) => {
-  let bookingReqs = new BookingRequests(request);
-  const res = await bookingReqs.createBooking2();
-  console.log(await res.headers());
-  console.log(await res.json());
-  console.log(await res.status());
+test("update booking - update body using serialization", async ({
+  request,
+}) => {
+  const booking = new Booking(
+    updatedFname,
+    lname,
+    totalPrice,
+    hasDeposite,
+    bookingDates,
+    additionalNeeds
+  );
+  let bookingReqs = new BookingRequests(request, token);
+  const res = await bookingReqs.updateBooking(newBookingId, booking);
   const resAsJson = await res.json();
   await expect(resAsJson.bookingid).not.toBeNull();
-  newBookingId = resAsJson.bookingid;
+  await expect(resAsJson.firstname).toEqual(updatedFname);
 });
 test("get all bookings", async ({ request }) => {
-  let bookingReqs = new BookingRequests(request);
-
+  let bookingReqs = new BookingRequests(request, token);
   const res = await bookingReqs.getAllBookings();
-  console.log(await res.headers());
-  console.log(await res.json());
-  console.log(await res.status());
   const allBookings: string[] = await res.json();
   expect(Array.isArray(allBookings)).toBe(true);
   console.log(allBookings);
   expect(allBookings).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ bookingid: newBookingId }),
+    ])
+  );
+});
+
+test("test deleting booking", async ({ request }) => {
+  let bookingReqs = new BookingRequests(request, token);
+  const deleteRes = await bookingReqs.deleteBooking(newBookingId, token);
+  expect(deleteRes.status()).toEqual(201);
+  const getAllBookingsRes = await bookingReqs.getAllBookings();
+  const allBookings: string[] = await getAllBookingsRes.json();
+  expect(Array.isArray(allBookings)).toBe(true);
+  console.log(allBookings);
+  expect(allBookings).toEqual(
+    expect.arrayContaining([
+      expect.not.objectContaining({ bookingid: newBookingId }),
     ])
   );
 });
