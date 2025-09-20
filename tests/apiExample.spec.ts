@@ -1,8 +1,15 @@
-import { test, expect, type Page } from "@playwright/test";
+import {
+  test,
+  expect,
+  type Page,
+  request,
+  APIRequestContext,
+} from "@playwright/test";
 import { BookingRequests } from "../requests/booking-requests";
 import { Booking, BookingDates } from "../pojo-bodies/Booking";
 import { AuthenticateRequests } from "../requests/auth-requests";
 
+let bookingApis: APIRequestContext;
 let token: any;
 let newBookingId: any;
 // classes
@@ -17,14 +24,16 @@ let bookingDates: BookingDates = new BookingDates("2018-01-01", "2019-01-01");
 let additionalNeeds: string = "breakfast";
 
 test.describe.configure({ mode: "serial" });
-test.beforeAll("precondition: Auth", async ({ request }) => {
-  authenticateReqs = new AuthenticateRequests(request);
+test.beforeAll("precondition: Auth", async ({}) => {
+  bookingApis = await request.newContext();
+  authenticateReqs = new AuthenticateRequests(bookingApis);
   const res = await authenticateReqs.authenticate();
   const resAsJson = await res.json();
   token = resAsJson.token;
+  bookingReqs = new BookingRequests(bookingApis, token);
 });
 
-test("create booking - get body using serialization", async ({ request }) => {
+test("create booking - get body using serialization", async ({}) => {
   const booking = new Booking(
     fname,
     lname,
@@ -33,7 +42,6 @@ test("create booking - get body using serialization", async ({ request }) => {
     bookingDates,
     additionalNeeds
   );
-  let bookingReqs = new BookingRequests(request, token);
   const res = await bookingReqs.createBooking(booking);
   const resAsJson = await res.json();
   await expect(resAsJson.bookingid).not.toBeNull();
@@ -41,9 +49,7 @@ test("create booking - get body using serialization", async ({ request }) => {
   newBookingId = resAsJson.bookingid;
 });
 
-test("update booking - update body using serialization", async ({
-  request,
-}) => {
+test("update booking - update body using serialization", async ({ }) => {
   const booking = new Booking(
     updatedFname,
     lname,
@@ -52,14 +58,12 @@ test("update booking - update body using serialization", async ({
     bookingDates,
     additionalNeeds
   );
-  let bookingReqs = new BookingRequests(request, token);
   const res = await bookingReqs.updateBooking(newBookingId, booking);
   const resAsJson = await res.json();
   await expect(resAsJson.bookingid).not.toBeNull();
   await expect(resAsJson.firstname).toEqual(updatedFname);
 });
-test("get all bookings", async ({ request }) => {
-  let bookingReqs = new BookingRequests(request, token);
+test("get all bookings", async ({  }) => {
   const res = await bookingReqs.getAllBookings();
   const allBookings: string[] = await res.json();
   expect(Array.isArray(allBookings)).toBe(true);
@@ -70,8 +74,7 @@ test("get all bookings", async ({ request }) => {
   );
 });
 
-test.afterAll("test deleting booking", async ({ request }) => {
-  let bookingReqs = new BookingRequests(request, token);
+test.afterAll("test deleting booking", async ({  }) => {
   const deleteRes = await bookingReqs.deleteBooking(newBookingId, token);
   expect(deleteRes.status()).toEqual(201);
   const getAllBookingsRes = await bookingReqs.getAllBookings();
