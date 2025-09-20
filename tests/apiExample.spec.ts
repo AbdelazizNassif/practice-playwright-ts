@@ -17,7 +17,7 @@ let bookingDates: BookingDates = new BookingDates("2018-01-01", "2019-01-01");
 let additionalNeeds: string = "breakfast";
 
 test.describe.configure({ mode: "serial" });
-test("precondition: Auth", async ({ request }) => {
+test.beforeAll("precondition: Auth", async ({ request }) => {
   authenticateReqs = new AuthenticateRequests(request);
   const res = await authenticateReqs.authenticate();
   const resAsJson = await res.json();
@@ -70,7 +70,7 @@ test("get all bookings", async ({ request }) => {
   );
 });
 
-test("test deleting booking", async ({ request }) => {
+test.afterAll("test deleting booking", async ({ request }) => {
   let bookingReqs = new BookingRequests(request, token);
   const deleteRes = await bookingReqs.deleteBooking(newBookingId, token);
   expect(deleteRes.status()).toEqual(201);
