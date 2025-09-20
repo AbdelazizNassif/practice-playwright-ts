@@ -14,8 +14,8 @@ export class AuthenticateRequests {
       "Content-Type": "application/json",
     },
     data: {
-      username: "admin",
-      password: "password123",
+      username: process.env.USER_NAME,
+      password: process.env.PASSWORD,
     },
   });
     return res;

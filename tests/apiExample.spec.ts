@@ -63,7 +63,6 @@ test("get all bookings", async ({ request }) => {
   const res = await bookingReqs.getAllBookings();
   const allBookings: string[] = await res.json();
   expect(Array.isArray(allBookings)).toBe(true);
-  console.log(allBookings);
   expect(allBookings).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ bookingid: newBookingId }),
@@ -78,7 +77,6 @@ test("test deleting booking", async ({ request }) => {
   const getAllBookingsRes = await bookingReqs.getAllBookings();
   const allBookings: string[] = await getAllBookingsRes.json();
   expect(Array.isArray(allBookings)).toBe(true);
-  console.log(allBookings);
   expect(allBookings).toEqual(
     expect.arrayContaining([
       expect.not.objectContaining({ bookingid: newBookingId }),
