@@ -1,7 +1,6 @@
 import {
   test,
   expect,
-  type Page,
   request,
   APIRequestContext,
 } from "@playwright/test";
@@ -9,7 +8,7 @@ import { BookingRequests } from "../requests/booking-requests";
 import { Booking, BookingDates } from "../pojo-bodies/Booking";
 import { AuthenticateRequests } from "../requests/auth-requests";
 
-let bookingApis: APIRequestContext;
+let requestForBookingTests: APIRequestContext;
 let token: any;
 let newBookingId: any;
 // classes
@@ -25,12 +24,12 @@ let additionalNeeds: string = "breakfast";
 
 test.describe.configure({ mode: "serial" });
 test.beforeAll("precondition: Auth", async ({}) => {
-  bookingApis = await request.newContext();
-  authenticateReqs = new AuthenticateRequests(bookingApis);
+  requestForBookingTests = await request.newContext();
+  authenticateReqs = new AuthenticateRequests(requestForBookingTests);
   const res = await authenticateReqs.authenticate();
   const resAsJson = await res.json();
   token = resAsJson.token;
-  bookingReqs = new BookingRequests(bookingApis, token);
+  bookingReqs = new BookingRequests(requestForBookingTests, token);
 });
 
 test("create booking - get body using serialization", async ({}) => {
