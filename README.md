@@ -6,6 +6,6 @@
 - dotenv
 ## Main features
 - Managing request bodies in classes
-- using .env file both locally
+- using .env file locally
 - Creating .env file at runtime in github actions step to hide env variables like base_url and user credentials
 - running in parallel files
